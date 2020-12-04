@@ -25,7 +25,7 @@ def destination(theta, d, phi1=0., lambda1=0.):
     return phi2, lambda2
 
 parser = argparse.ArgumentParser()
-parser.add_argument('infile', nargs=1, help='Input yaml file')
+parser.add_argument('infile', help='Input yaml file')
 args = parser.parse_args()
 conf = safe_load(open(args.infile))
 

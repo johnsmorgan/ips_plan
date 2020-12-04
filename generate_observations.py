@@ -9,7 +9,7 @@ from astropy.time import Time
 S = slice(None, None, None)
 
 parser = argparse.ArgumentParser()
-parser.add_argument('infile', nargs=1, help='Input yaml file')
+parser.add_argument('infile', help='Input yaml file')
 args = parser.parse_args()
 conf = safe_load(open(args.infile))
 

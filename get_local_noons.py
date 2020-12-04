@@ -12,7 +12,7 @@ from astroplan import Observer
 INTERVAL = 1 # days
 
 parser = argparse.ArgumentParser()
-parser.add_argument('infile', nargs=1, help='Input yaml file')
+parser.add_argument('infile', help='Input yaml file')
 args = parser.parse_args()
 conf = safe_load(open(args.infile))
 

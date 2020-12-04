@@ -14,7 +14,7 @@ INTERVAL_DEGREES = 3.3424596978682920e-02 # interval in degrees for fine HA sear
 N = 75 #observation length in units of INTERVAL_DEGREES
 
 parser = argparse.ArgumentParser()
-parser.add_argument('infile', nargs=1, help='Input yaml file')
+parser.add_argument('infile', help='Input yaml file')
 args = parser.parse_args()
 conf = safe_load(open(args.infile))
 
