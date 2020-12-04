@@ -8,7 +8,6 @@ from scipy.interpolate import interp1d
 #PLOT=False
 INTERVAL_DEGREES = 3.3424596978682920e-02 # interval in degrees for fine HA search
 N=75 #observation length in units of INTERVAL_DEGREES
-HA_TWEAK = 2 # degrees to allow the hour angle to drift in fine optimisation for solar nulling
 conf = safe_load(open("MWA_IPS_2020B.yaml"))
 
 COLS = conf['priority']
@@ -16,13 +15,12 @@ COLS = conf['priority']
 
 
 targets = csv.DictReader(line for line in open(conf['files']['targets']))
-df = File("/home/jmorgan/Projects/allsky/sweetspots/beams.hdf5", 'r')
+df = File(conf['files']['beams'], 'r')
 fine_scale = np.arange(np.min(df['beams'].dims[2][0]), np.max(df['beams'].dims[2][0]), INTERVAL_DEGREES)
 
 obs_ha = []
 
 arg_closest = lambda x, y: np.argmin(np.abs((x-y)))
-
 
 def neighbours(arr, val):
     """
@@ -110,12 +108,19 @@ for target in targets:
         beam = df['beams'].dims[0][0][beam_idx]
         # refine ha 
         # 
-        fine_ha_interp = interp1d(df['beams'].dims[2][0][ha_idx-2:ha_idx+3],
-                                  sun_beam[beam_idx, ha_idx-2:ha_idx+3],
+        tt_rounded = int(np.ceil(conf['timeTweakDegrees']))
+        fine_slice = slice(ha_idx-tt_rounded, ha_idx+tt_rounded+1)
+
+
+
+        fine_ha_interp = interp1d(df['beams'].dims[2][0][fine_slice],
+                                  sun_beam[beam_idx, fine_slice],
                                   kind='quadratic')
-        fine_has = fine_scale[np.abs(fine_scale-ha)<2.0]
+        fine_has = fine_scale[np.abs(fine_scale-ha)<conf['timeTweakDegrees']]
         #print("ha=%f min=%f max=%f" % (ha, fine_has[0], fine_has[-1]), end=' ')
         fine_sun_beam = fine_ha_interp(fine_has)
+
+        # blank out existing with np.inf
         for ha_ in day_has:
             fine_sun_beam = np.where(np.abs(fine_has-ha_)<N*INTERVAL_DEGREES, np.inf, fine_sun_beam)
         #if np.any(fine_sun_beam==np.inf):
