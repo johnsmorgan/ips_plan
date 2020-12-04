@@ -1,3 +1,4 @@
+import argparse
 from yaml import safe_load
 from datetime import datetime
 from numpy import radians, sin, cos, arcsin, arctan2, ones
@@ -19,7 +20,11 @@ def destination(theta, d, phi1=0., lambda1=0.):
     lambda2 = lambda1 + arctan2(sin(theta)*sin(d)*cos(phi1), cos(d)-sin(phi1)*sin(phi2))
     return phi2, lambda2
 
-conf = safe_load(open("MWA_IPS_2020B.yaml"))
+parser = argparse.ArgumentParser()
+parser.add_argument('infile', help='Input yaml file')
+args = parser.parse_args()
+conf = safe_load(open(args.infile))
+
 noons = ascii.read(conf['files']['noons'])
 
 times = Time(noons['local_noon_str'])

@@ -1,18 +1,17 @@
-import sys
+import sys, csv, argparse
 from yaml import safe_load
 from h5py import File
-import csv
 import numpy as np
 #from matplotlib import pyplot as plt
 from scipy.interpolate import interp1d
 #PLOT=False
 INTERVAL_DEGREES = 3.3424596978682920e-02 # interval in degrees for fine HA search
 N=75 #observation length in units of INTERVAL_DEGREES
-conf = safe_load(open("MWA_IPS_2020B.yaml"))
 
-COLS = conf['priority']
-#LABELS = {k: v for k, v in zip(('1', '2', '3', '4', '5', '6', 'boss', '7', '8', '9'), ('SE', 'E', 'SSE', 'SSW', 'W', 'NW', 'BOSS', 'SW', 'NE', 'S'))}
-
+parser = argparse.ArgumentParser()
+parser.add_argument('infile', help='Input yaml file')
+args = parser.parse_args()
+conf = safe_load(open(args.infile))
 
 targets = csv.DictReader(line for line in open(conf['files']['targets']))
 df = File(conf['files']['beams'], 'r')
@@ -60,7 +59,7 @@ for target in targets:
     #print(sun_beam)
     ha_grid = None
     day_has = []
-    for c in COLS:
+    for c in conf['priority']:
         if target['ha_%s' % c] == '':
             out_dict['ha_%s' % c] = np.nan
             out_dict['beam_%s' % c] = -1
@@ -110,8 +109,6 @@ for target in targets:
         # 
         tt_rounded = int(np.ceil(conf['timeTweakDegrees']))
         fine_slice = slice(ha_idx-tt_rounded, ha_idx+tt_rounded+1)
-
-
 
         fine_ha_interp = interp1d(df['beams'].dims[2][0][fine_slice],
                                   sun_beam[beam_idx, fine_slice],

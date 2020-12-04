@@ -1,4 +1,4 @@
-import csv, json
+import csv, json, argparse
 import numpy as np
 from yaml import safe_load
 from astropy.coordinates import Angle, AltAz, EarthLocation
@@ -8,7 +8,11 @@ from astropy.time import Time
 
 S = slice(None, None, None)
 
-conf = safe_load(open("MWA_IPS_2020B.yaml"))
+
+parser = argparse.ArgumentParser()
+parser.add_argument('infile', help='Input yaml file')
+args = parser.parse_args()
+conf = safe_load(open(args.infile))
 
 SUN_OBS_STR = "schedule_observation.py --starttime={pre_time_comma} --stoptime=++16s --freq='{coarse_channels}' --obsname={obs_name_prefix}Sun --source=Sun --mode=HW_LFILES --inttime={inttime} --freqres={freqres} --creator=jmorgan --project={project}"
 OBSERVATION_STR = "schedule_observation.py --starttime={time_comma} --stoptime=++{duration}s --freq='{coarse_channels}'  --obsname={obs_name_prefix}{field} --shifttime={shifttime} --mode=HW_LFILES --inttime={inttime} --freqres={freqres} --creator={creator} --project={project} --azimuth={az} --elevation={el} --nomode"

@@ -1,3 +1,4 @@
+import argparse
 from yaml import safe_load
 from datetime import datetime
 from astropy.time import Time
@@ -6,7 +7,11 @@ from astroplan import Observer
 import astropy.units as u
 
 INTERVAL=1 # days
-conf = safe_load(open("MWA_IPS_2020B.yaml"))
+
+parser = argparse.ArgumentParser()
+parser.add_argument('infile', help='Input yaml file')
+args = parser.parse_args()
+conf = safe_load(open(args.infile))
 
 location = EarthLocation.from_geodetic(lat=conf['lat']*u.deg,
                                        lon=conf['lon']*u.deg,
