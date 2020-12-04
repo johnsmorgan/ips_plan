@@ -6,7 +6,7 @@ from astroplan import Observer
 import astropy.units as u
 
 INTERVAL=1 # days
-conf = safe_load(open("MWA_IPS_2020A_full.yaml"))
+conf = safe_load(open("MWA_IPS_2020B.yaml"))
 
 location = EarthLocation.from_geodetic(lat=conf['lat']*u.deg,
                                        lon=conf['lon']*u.deg,
@@ -16,7 +16,7 @@ obs = Observer(location)
 t = Time(datetime.combine(conf['startDate'], datetime.min.time()))  + 12*u.hour - conf['timezone']*u.hour
 t_end = Time(datetime.combine(conf['stopDate'], datetime.min.time()))  + 12*u.hour - conf['timezone']*u.hour
 
-with open(conf['files']['noon'], 'w') as f:
+with open(conf['files']['noons'], 'w') as f:
     print("local_noon_str,local_noon_lst", file=f)
     while t <= t_end:
         local_noon_str = obs.noon(t, which='nearest').isot
