@@ -1,12 +1,17 @@
-import sys, csv, argparse
-from yaml import safe_load
-from h5py import File
+"""
+Optimized scheduling of observations
+"""
+import argparse
+import csv
 import numpy as np
-#from matplotlib import pyplot as plt
+from h5py import File
 from scipy.interpolate import interp1d
+from yaml import safe_load
+#from matplotlib import pyplot as plt
+
 #PLOT=False
 INTERVAL_DEGREES = 3.3424596978682920e-02 # interval in degrees for fine HA search
-N=75 #observation length in units of INTERVAL_DEGREES
+N = 75 #observation length in units of INTERVAL_DEGREES
 
 parser = argparse.ArgumentParser()
 parser.add_argument('infile', help='Input yaml file')
@@ -41,7 +46,7 @@ def lin_interp(y1, y2, dx):
     return linear interpolationn of y1 and y2
 
     y1 and y2 are y(x1) and y(x2)
-    
+
     dx controls the relative weighting of y1 and y2 in the interpolation
     """
     return y1*(1-dx)+y2*dx
@@ -78,7 +83,7 @@ for target in targets:
         target_beam = lin_interp(df['beams'][:, target_dec_idx[0], :],
                                  df['beams'][:, target_dec_idx[1], :],
                                  target_dec - df['beams'].dims[1][0][target_dec_idx[0]])
-                                
+
         target_beam = np.roll(target_beam, target_ha_idx, axis=1)/np.expand_dims(df['broadness'][...], 1)
         sun_filter = sun_beam < 10**conf['solarAttenuationCutoff']
 
@@ -103,23 +108,23 @@ for target in targets:
         ha_idx = ha_grid[sun_filter&target_filter][flat_idx]
         beam_idx = beam_grid[sun_filter&target_filter][flat_idx]
         #FIXME interpolate to 8s resolution and choose minimum within 4-minute window
-        ha =  df['beams'].dims[2][0][ha_idx]
+        ha = df['beams'].dims[2][0][ha_idx]
         beam = df['beams'].dims[0][0][beam_idx]
-        # refine ha 
-        # 
+        # refine ha
+        #
         tt_rounded = int(np.ceil(conf['timeTweakDegrees']))
         fine_slice = slice(ha_idx-tt_rounded, ha_idx+tt_rounded+1)
 
         fine_ha_interp = interp1d(df['beams'].dims[2][0][fine_slice],
                                   sun_beam[beam_idx, fine_slice],
                                   kind='quadratic')
-        fine_has = fine_scale[np.abs(fine_scale-ha)<conf['timeTweakDegrees']]
+        fine_has = fine_scale[np.abs(fine_scale-ha) < conf['timeTweakDegrees']]
         #print("ha=%f min=%f max=%f" % (ha, fine_has[0], fine_has[-1]), end=' ')
         fine_sun_beam = fine_ha_interp(fine_has)
 
         # blank out existing with np.inf
         for ha_ in day_has:
-            fine_sun_beam = np.where(np.abs(fine_has-ha_)<N*INTERVAL_DEGREES, np.inf, fine_sun_beam)
+            fine_sun_beam = np.where(np.abs(fine_has-ha_) < N*INTERVAL_DEGREES, np.inf, fine_sun_beam)
         #if np.any(fine_sun_beam==np.inf):
             #print()
             #print(fine_sun_beam)
@@ -147,7 +152,7 @@ for target in targets:
     obs_ha.append(out_dict)
 
 with open(conf['files']['observations'], 'w') as csvfile:
-    fieldnames = sorted(obs_ha[0].keys(), key = lambda k: k[::-1])
+    fieldnames = sorted(obs_ha[0].keys(), key=lambda k: k[::-1])
     fieldnames.insert(0, fieldnames.pop(-1))
     fieldnames.insert(0, fieldnames.pop(-1))
     writer = csv.DictWriter(csvfile, fieldnames=fieldnames)

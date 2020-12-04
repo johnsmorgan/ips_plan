@@ -1,12 +1,15 @@
+"""
+Compute local solar noon in LST and UTC and write to file.
+"""
 import argparse
-from yaml import safe_load
 from datetime import datetime
-from astropy.time import Time
+from yaml import safe_load
+from astropy import units as u
 from astropy.coordinates import EarthLocation, Longitude
+from astropy.time import Time
 from astroplan import Observer
-import astropy.units as u
 
-INTERVAL=1 # days
+INTERVAL = 1 # days
 
 parser = argparse.ArgumentParser()
 parser.add_argument('infile', help='Input yaml file')
@@ -29,5 +32,5 @@ with open(conf['files']['noons'], 'w') as f:
         print(local_noon_str, end=' ')
         print(local_noon_lst)
         print()
-        print("%s,%.3f" % (local_noon_str[:19],local_noon_lst), file=f)
+        print("%s,%.3f" % (local_noon_str[:19], local_noon_lst), file=f)
         t += INTERVAL*u.day

@@ -1,12 +1,16 @@
+"""
+Calculate coordinates of each observation
+"""
 import argparse
-from yaml import safe_load
 from datetime import datetime
 from numpy import radians, sin, cos, arcsin, arctan2, ones
-from astropy.time import Time
-from astropy.io import ascii
-from astropy.table import Column
+from yaml import safe_load
+
+from astropy import io
+from astropy import units as u
 from astropy.coordinates import SkyCoord, Longitude, get_sun, GeocentricTrueEcliptic, GCRS
-import astropy.units as u
+from astropy.table import Column
+from astropy.time import Time
 
 def destination(theta, d, phi1=0., lambda1=0.):
     """
@@ -25,7 +29,7 @@ parser.add_argument('infile', help='Input yaml file')
 args = parser.parse_args()
 conf = safe_load(open(args.infile))
 
-noons = ascii.read(conf['files']['noons'])
+noons = io.ascii.read(conf['files']['noons'])
 
 times = Time(noons['local_noon_str'])
 start_time = Time(datetime.combine(conf['startDate'], datetime.min.time()))
@@ -46,8 +50,8 @@ sun_ecliptic = sun_eq.geocentrictrueecliptic
 #print sun_eq.geocentrictrueecliptic
 for target in conf['priority']:
     if conf['fields'][target]['system'] == "Heliocentric":
-        l1, phi1 = conf['fields'][target]['coordinates']
-        target_offset = destination(radians(phi1), radians(l1))
+        l1, phi = conf['fields'][target]['coordinates']
+        target_offset = destination(radians(phi), radians(l1))
         print(target_offset)
         target_ecliptic = GeocentricTrueEcliptic(sun_ecliptic.lon + u.rad*target_offset[1], sun_ecliptic.lat + u.rad*target_offset[0])
         #print(target_ecliptic)
@@ -58,11 +62,11 @@ for target in conf['priority']:
         ra = Column(data=target_eq.ra.deg, name='ra_%s' % (target))
         ha = Column(data=Longitude(target_eq.ra - sun_eq.ra, wrap_angle=180*u.deg).deg, name='ha_%s' % (target))
         dec = Column(data=target_eq.dec, name='dec_%s' % (target))
-        out_table.add_columns([lon,lat,ra,dec,ha])
+        out_table.add_columns([lon, lat, ra, dec, ha])
     elif conf['fields'][target]['system'] == "Ecliptic":
         ra_coord, dec_coord = conf['fields'][target]['coordinates']
         ra = Column(data=ra_coord*ones(times.shape)*u.deg, name='ra_%s' % (target))
         ha = Column(data=Longitude(ra_coord*ones(times.shape)*u.deg - sun_eq.ra, wrap_angle=180*u.deg).deg, name='ha_%s' % (target))
         dec = Column(data=dec_coord*ones(times.shape)*u.deg, name='dec_%s' % (target))
-        out_table.add_columns([ra,dec,ha])
+        out_table.add_columns([ra, dec, ha])
 out_table.write(conf['files']['targets'], format='csv', overwrite=True)
