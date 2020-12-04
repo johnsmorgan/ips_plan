@@ -1,14 +1,14 @@
 import csv, json
 import numpy as np
 from yaml import safe_load
-from astropy.coordinates import Angle
+from astropy.coordinates import Angle, AltAz, EarthLocation
 from astropy.io import ascii
 from astropy import units as u
 from astropy.time import Time
 
 S = slice(None, None, None)
 
-conf = safe_load(open("MWA_IPS_2020A.yaml"))
+conf = safe_load(open("MWA_IPS_2020B.yaml"))
 
 SUN_OBS_STR = "schedule_observation.py --starttime={pre_time_comma} --stoptime=++16s --freq='{coarse_channels}' --obsname={obs_name_prefix}Sun --source=Sun --mode=HW_LFILES --inttime={inttime} --freqres={freqres} --creator=jmorgan --project={project}"
 OBSERVATION_STR = "schedule_observation.py --starttime={time_comma} --stoptime=++{duration}s --freq='{coarse_channels}'  --obsname={obs_name_prefix}{field} --shifttime={shifttime} --mode=HW_LFILES --inttime={inttime} --freqres={freqres} --creator={creator} --project={project} --azimuth={az} --elevation={el} --nomode"
@@ -17,8 +17,7 @@ NO_WRITE = []
 
 azel = {int(k): v for k, v in json.load(open("azel.json")).items()}
 
-#obs_ha = ascii.read("obs_ha.csv")
-obs_ha = ascii.read("obs_ha2.csv")
+obs_ha = ascii.read(conf['files']['observations'])
 noons = Time(obs_ha['local_noon_str'][S])
 
 observations = []
@@ -35,6 +34,7 @@ for t in conf['priority']:
     for j in range(len(noons)):
         if np.isnan(obs_ha['ha_%s' % t][S][j]):
             continue
+        print(t)
         out_dict = []
         out_dict = conf['obs']
         out_dict['sweetspot'] = obs_ha['beam_%s' % t][S].data[j]
@@ -45,44 +45,48 @@ for t in conf['priority']:
         out_dict['obs_name_prefix'] = conf['obsName']
         out_dict['field'] = t
         out_dict['project'] = conf['project']
+        out_dict['ha'] = obs_ha['ha_%s' % t][S].data[j]
+        out_dict['sun_attenuation'] = obs_ha['sun_attenuation_%s' % t][S].data[j]
+        out_dict['target_sensitivity'] = obs_ha['ha_%s' % t][S].data[j]
         observations.append(out_dict.copy())
 
 observations = sorted(observations, key=lambda o: o['time'])
 
 #with open('observations2.json', 'w') as jsonfile:
-#    json.dump(observations, jsonfile)
+    #json.dump(observations, jsonfile)
 
 t1 = None
-for o in observations:
-    if o['field'] in NO_WRITE:
-        t1 = Time(o['time'])
-        continue
-    t2 = Time(o['time'])
-    if t1:
-        #print('# ' + str((t2-t1).sec))
-        if t2-t1 < u.second*(conf['obs']['duration']+32):
-            if t2-t1 < u.second*(conf['obs']['duration']):
-                print("# ERROR Clashing observations %fs apart" % ((t2-t1).sec))
-            print("# Observations %.0fs apart -- skipping Sun observation" % ((t2-t1).sec))
+with open(conf['files']['schedule'], 'w') as outfile:
+    for o in observations:
+        if o['field'] in NO_WRITE:
+            t1 = Time(o['time'])
+            continue
+        t2 = Time(o['time'])
+        if t1:
+            #print('# ' + str((t2-t1).sec))
+            if t2-t1 < u.second*(conf['obs']['duration']+32):
+                if t2-t1 < u.second*(conf['obs']['duration']):
+                    print("# ERROR Clashing observations %fs apart" % ((t2-t1).sec), file=outfile)
+                print("# Observations %.0fs apart -- skipping Sun observation" % ((t2-t1).sec), file=outfile)
+            else:
+                print(SUN_OBS_STR.format(**o), file=outfile)
+                sun_target_time += 16
+                schedule_time += 32
+
         else:
-            print(SUN_OBS_STR.format(**o))
-            sun_target_time += 16
-            schedule_time += 32
+            print(SUN_OBS_STR.format(**o), file=outfile)
+            #pass
+        #print(o)
+        print(OBSERVATION_STR.format(**o), file=outfile)
+        target_time += conf['obs']['duration']
+        sun_target_time += conf['obs']['duration']
+        schedule_time += conf['obs']['duration']
+        t1 = t2
 
-    else:
-        print(SUN_OBS_STR.format(**o))
-        #pass
-    #print(o)
-    print(OBSERVATION_STR.format(**o))
-    target_time += conf['obs']['duration']
-    sun_target_time += conf['obs']['duration']
-    schedule_time += conf['obs']['duration']
-    t1 = t2
-print("# target time: %d sun/target time: %d schedule time: %d" % (target_time, sun_target_time, schedule_time))
-#with open('observations.csv', 'w') as csvfile:
-    #fieldnames = ('time', 'sweetspot')
-    #writer = csv.DictWriter(csvfile, fieldnames=fieldnames)
-
-    #writer.writeheader()
-    #for out_dict in observations:
-        #writer.writerow(out_dict)
+    print("# target time: %d sun/target time: %d schedule time: %d" % (target_time, sun_target_time, schedule_time), file=outfile)
+with open('observations_long.csv', 'w') as csvfile:
+    fieldnames = ('time', 'field', 'sweetspot', 'ha', 'az', 'el', 'sun_attenuation', 'target_sensitivity')
+    writer = csv.DictWriter(csvfile, fieldnames=fieldnames, extrasaction='ignore')
+    writer.writeheader()
+    for out_dict in observations:
+        writer.writerow(out_dict)
