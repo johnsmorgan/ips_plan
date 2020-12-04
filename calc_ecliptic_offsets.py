@@ -1,5 +1,6 @@
 from yaml import safe_load
-from numpy import radians, sin, cos, arcsin, arctan2
+from datetime import datetime
+from numpy import radians, sin, cos, arcsin, arctan2, ones
 from astropy.time import Time
 from astropy.io import ascii
 from astropy.table import Column
@@ -18,17 +19,17 @@ def destination(theta, d, phi1=0., lambda1=0.):
     lambda2 = lambda1 + arctan2(sin(theta)*sin(d)*cos(phi1), cos(d)-sin(phi1)*sin(phi2))
     return phi2, lambda2
 
-conf = safe_load(open("MWA_IPS_2020A.yaml"))
+conf = safe_load(open("MWA_IPS_2020B.yaml"))
+noons = ascii.read(conf['files']['noons'])
 
-INTERVAL = None
-SKIP = None
-LAST = None
-s = slice(SKIP, LAST, INTERVAL)
+times = Time(noons['local_noon_str'])
+start_time = Time(datetime.combine(conf['startDate'], datetime.min.time()))
+stop_time = Time(datetime.combine(conf['stopDate'], datetime.min.time()))
+good_times = (times > start_time) & (times < stop_time)
+times = times[good_times]
 
-noons = ascii.read(conf['files']['noon'])
-out_table = noons[s]
+out_table = noons[good_times]
 
-times = Time(noons['local_noon_str'][s])
 sun_3d = get_sun(times)
 sun_eq = SkyCoord(sun_3d.ra, sun_3d.dec)
 
@@ -55,8 +56,8 @@ for target in conf['priority']:
         out_table.add_columns([lon,lat,ra,dec,ha])
     elif conf['fields'][target]['system'] == "Ecliptic":
         ra_coord, dec_coord = conf['fields'][target]['coordinates']
-        ra = Column(data=ra_coord, name='ra_%s' % (target))
-        ha = Column(data=Longitude(ra_coord*u.deg - sun_eq.ra, wrap_angle=180*u.deg).deg, name='ha_%s' % (target))
-        dec = Column(data=dec_coord, name='dec_%s' % (target))
+        ra = Column(data=ra_coord*ones(times.shape)*u.deg, name='ra_%s' % (target))
+        ha = Column(data=Longitude(ra_coord*ones(times.shape)*u.deg - sun_eq.ra, wrap_angle=180*u.deg).deg, name='ha_%s' % (target))
+        dec = Column(data=dec_coord*ones(times.shape)*u.deg, name='dec_%s' % (target))
         out_table.add_columns([ra,dec,ha])
 out_table.write(conf['files']['targets'], format='csv', overwrite=True)
