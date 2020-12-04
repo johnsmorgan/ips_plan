@@ -1,0 +1,91 @@
+%YAML 1.1
+# see https://yaml.org/refcard.html for details on syntax 
+---
+# https://www.mwatelescope.org/images/documents/MWA_2020-B_call_for_proposals.pdf
+name: MWA_IPS_2020B # will be used as a prefix for all filenames
+obsName: morgan2020B_ips_ # will prefix the obsname (followed by field name)
+project: G0060
+# dates of observations (start-inclusive, stops at 00:00 on stopDate)
+startDate: 2020-12-01
+stopDate: 2020-12-31
+
+# Observatory
+lat: -26.703319 # degrees
+lon: 116.67081 # degrees
+alt: 377 # m
+timezone: 8.0 # hours relative to UTC -- the local date (YYYY-MM-DD) of each local solar noon will be used
+              # as a unique identifier of each day's observing. Actual observations for that day will be
+              # scheduled within 0.5 sidereal days of the local solar noon.
+
+fields: 
+  NNE: &wide_area
+    system: Heliocentric 
+    coordinates: [30.0, 30.0] # solar elongation and angle (relative to Ecliptic North) (both in degrees)
+    project_id: G0060
+  NE:
+    system: Heliocentric 
+    coordinates: [30.0, 60.0] # solar elongation and angle (relative to Ecliptic North) (both in degrees)
+    project_id: G0060
+  E:
+    system: Heliocentric 
+    coordinates: [30.0, 90.0] # solar elongation and angle (relative to Ecliptic North) (both in degrees)
+    project_id: G0060
+  SE:
+    system: Heliocentric 
+    coordinates: [30.0, 120.0] # solar elongation and angle (relative to Ecliptic North) (both in degrees)
+    project_id: G0060
+  SSE:
+    system: Heliocentric 
+    coordinates: [30.0, 150.0] # solar elongation and angle (relative to Ecliptic North) (both in degrees)
+    project_id: G0060
+  NNW:
+    system: Heliocentric 
+    coordinates: [30.0, -30.0] # solar elongation and angle (relative to Ecliptic North) (both in degrees)
+    project_id: G0060
+  NW:
+    system: Heliocentric 
+    coordinates: [30.0, -60.0] # solar elongation and angle (relative to Ecliptic North) (both in degrees)
+    project_id: G0060
+  W:
+    system: Heliocentric 
+    coordinates: [30.0, -90.0] # solar elongation and angle (relative to Ecliptic North) (both in degrees)
+    project_id: G0060
+  SW:
+    system: Heliocentric 
+    coordinates: [30.0, -120.0] # solar elongation and angle (relative to Ecliptic North) (both in degrees)
+    project_id: G0060
+  SSW:
+    system: Heliocentric 
+    coordinates: [30.0, -150.0] # solar elongation and angle (relative to Ecliptic North) (both in degrees)
+    project_id: G0060
+
+priority: # highest priority first
+  - E
+  - W
+  - SE
+  - SW
+  - NE
+  - NW
+  - SSE
+  - SSW
+  - NNE
+  - NNW
+
+solarAttenuationCutoff: -3.0 # log10 of solar attenuation required relative to beam centre
+timeTweakDegrees: 2.0 # after selecting a pointing and an LST, allow exact observing time to drift within
+                      # +/- this value to select maximum solar attenuation.
+
+files:
+        beams: /home/jmorgan/Projects/allsky/sweetspots/beams.hdf5
+        noons: solar_noons.csv
+        targets: targets.csv
+        observations: observations.csv
+        schedule: schedule.sh
+obs:
+    coarse_channels: "57:68;121:132"
+    pre_time: 16 #s
+    duration: 600 #s
+    shifttime: 608 #s
+    inttime: 0.5 #s
+    freqres: 10 #kHz
+    creator: 'jmorgan'
