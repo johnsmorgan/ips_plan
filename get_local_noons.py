@@ -2,35 +2,38 @@
 Compute local solar noon in LST and UTC and write to file.
 """
 import argparse
-from datetime import datetime
+from datetime import datetime, timedelta, timezone
 from yaml import safe_load
+from skyfield import almanac
+from skyfield.api import load, Topos
 from astropy import units as u
-from astropy.coordinates import EarthLocation, Longitude
-from astropy.time import Time
-from astroplan import Observer
+from astropy.coordinates import Longitude
 
 INTERVAL = 1 # days
+
+eph = load('de421.bsp')
+ts = load.timescale()
 
 parser = argparse.ArgumentParser()
 parser.add_argument('infile', help='Input yaml file')
 args = parser.parse_args()
 conf = safe_load(open(args.infile))
 
-location = EarthLocation.from_geodetic(lat=conf['lat']*u.deg,
-                                       lon=conf['lon']*u.deg,
-                                       height=conf['alt']*u.m)
-obs = Observer(location)
+earth, sun = eph['EARTH BARYCENTER'], eph['sun']
 
-t = Time(datetime.combine(conf['startDate'], datetime.min.time()))  + 12*u.hour - conf['timezone']*u.hour
-t_end = Time(datetime.combine(conf['stopDate'], datetime.min.time()))  + 12*u.hour - conf['timezone']*u.hour
+location = Topos(latitude_degrees=conf['lat'], longitude_degrees=conf['lon'], elevation_m=conf['alt'])
+
+t_start = ts.from_datetime(datetime.combine(conf['startDate'], datetime.min.time(), tzinfo=timezone(timedelta(hours=conf['timezone']))) + timedelta(hours=12))
+t_end   = ts.from_datetime(datetime.combine(conf['stopDate'],  datetime.min.time(), tzinfo=timezone(timedelta(hours=conf['timezone']))) + timedelta(hours=12))
+
+f = almanac.meridian_transits(eph, sun, location)
+times, y = almanac.find_discrete(t_start, t_end, f)
+#print(t)
+#print(y)
 
 with open(conf['files']['noons'], 'w') as f:
     print("local_noon_str,local_noon_lst", file=f)
-    while t <= t_end:
-        local_noon_str = obs.noon(t, which='nearest').isot
-        local_noon_lst = Longitude(obs.local_sidereal_time(local_noon_str), wrap_angle=180*u.deg).deg
-        print(local_noon_str, end=' ')
-        print(local_noon_lst)
-        print()
-        print("%s,%.3f" % (local_noon_str[:19], local_noon_lst), file=f)
-        t += INTERVAL*u.day
+    for t, time in enumerate(times):
+        if y[t]:
+            local_noon_lst = Longitude(time.gmst*u.hourangle + conf['lon']*u.deg, wrap_angle=180*u.deg).deg
+            print(time.utc_iso()[:-1], "%.3f" % local_noon_lst, sep=',', file=f)
