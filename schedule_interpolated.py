@@ -43,7 +43,7 @@ def neighbours(arr, val):
 
 def lin_interp(y1, y2, dx):
     """
-    return linear interpolationn of y1 and y2
+    return linear interpolation of y1 and y2
 
     y1 and y2 are y(x1) and y(x2)
 
