@@ -8,7 +8,7 @@ from yaml import safe_load
 
 from astropy import io
 from astropy import units as u
-from astropy.coordinates import SkyCoord, Longitude, get_sun, GeocentricTrueEcliptic, GCRS
+from astropy.coordinates import Angle, SkyCoord, Longitude, get_sun, GeocentricTrueEcliptic, GCRS
 from astropy.table import Table, Column
 from astropy.time import Time
 
@@ -23,6 +23,14 @@ def destination(theta, d, phi1=0., lambda1=0.):
     phi2 = arcsin(sin(phi1)*cos(d) + cos(phi1)*sin(d)*cos(theta))
     lambda2 = lambda1 + arctan2(sin(theta)*sin(d)*cos(phi1), cos(d)-sin(phi1)*sin(phi2))
     return phi2, lambda2
+
+def parse_time(t_string):
+    """
+    Parse time without date (i.e. HH:MM:SS) and return as number of seconds 
+    since midnight, returning as degrees
+    """
+    t = Angle(t_string, unit=u.hour)
+    return t.deg
 
 parser = argparse.ArgumentParser()
 parser.add_argument('infile', help='Input yaml file')
@@ -74,4 +82,16 @@ for target in conf['priority']:
         assert 'offset' in conf['fields'][target], "target %s has 'skip' but no 'offset'"
         out_table['ha_%s' % target].mask = True
         out_table['ha_%s' % target].mask[conf['fields'][target]['offset']::conf['fields'][target]['skip']] = False
+
+if 'flags' in conf.keys():
+    noon_deg = parse_time([t.isot[11:] for t in times])
+    for f, flag in enumerate(conf['flags']):
+        assert flag['type']=='daily', "only daily type flags supported"
+        print(f"start:{flag['start']} stop:{flag['stop']}")
+        start = parse_time(flag['start'])
+        stop = parse_time(flag['stop'])
+        print(f"start:{start} deg stop:{stop} deg")
+        out_table['start_flag_%d' % (f+1)] = start-noon_deg
+        out_table['stop_flag_%d' % (f+1)] = stop-noon_deg
+
 out_table.write(conf['files']['targets'], format='csv', overwrite=True)
