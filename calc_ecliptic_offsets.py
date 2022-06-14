@@ -85,13 +85,14 @@ for target in conf['priority']:
 
 if 'flags' in conf.keys():
     noon_deg = parse_time([t.isot[11:] for t in times])
+    sidereal=float(1.*u.day/u.sday)
     for f, flag in enumerate(conf['flags']):
         assert flag['type']=='daily', "only daily type flags supported"
         print(f"start:{flag['start']} stop:{flag['stop']}")
         start = parse_time(flag['start'])
         stop = parse_time(flag['stop'])
         print(f"start:{start} deg stop:{stop} deg")
-        out_table['start_flag_%d' % (f+1)] = start-noon_deg
-        out_table['stop_flag_%d' % (f+1)] = stop-noon_deg
+        out_table['start_flag_%d' % (f+1)] = sidereal*(start-noon_deg)
+        out_table['stop_flag_%d' % (f+1)] = sidereal*(stop-noon_deg)
 
 out_table.write(conf['files']['targets'], format='csv', overwrite=True)
