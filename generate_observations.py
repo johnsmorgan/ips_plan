@@ -18,7 +18,7 @@ OBSERVATION_STR = "schedule_observation.py --starttime={time_comma} --stoptime=+
 
 NO_WRITE = []
 
-azel = {int(k): v for k, v in json.load(open("azel.json")).items()}
+azel = {int(k): v for k, v in json.load(open(conf['files']['pointings'])).items()}
 
 obs_ha = ascii.read(conf['files']['observations'])
 noons = Time(obs_ha['local_noon_str'][S])
