@@ -9,7 +9,7 @@ from yaml import safe_load
 from astropy import io
 from astropy import units as u
 from astropy.coordinates import SkyCoord, Longitude, get_sun, GeocentricTrueEcliptic, GCRS
-from astropy.table import Column
+from astropy.table import Table, Column
 from astropy.time import Time
 
 def destination(theta, d, phi1=0., lambda1=0.):
@@ -38,6 +38,7 @@ good_times = (times > start_time) & (times < stop_time)
 times = times[good_times]
 
 out_table = noons[good_times]
+out_table = Table(out_table, masked=True, copy=False)  # convert to masked table
 
 sun_3d = get_sun(times)
 sun_eq = SkyCoord(sun_3d.ra, sun_3d.dec)
@@ -69,4 +70,8 @@ for target in conf['priority']:
         ha = Column(data=Longitude(ra_coord*ones(times.shape)*u.deg - sun_eq.ra, wrap_angle=180*u.deg).deg, name='ha_%s' % (target))
         dec = Column(data=dec_coord*ones(times.shape)*u.deg, name='dec_%s' % (target))
         out_table.add_columns([ra, dec, ha])
+    if 'skip' in conf['fields'][target]:
+        assert 'offset' in conf['fields'][target], "target %s has 'skip' but no 'offset'"
+        out_table['ha_%s' % target].mask = True
+        out_table['ha_%s' % target].mask[conf['fields'][target]['offset']::conf['fields'][target]['skip']] = False
 out_table.write(conf['files']['targets'], format='csv', overwrite=True)
