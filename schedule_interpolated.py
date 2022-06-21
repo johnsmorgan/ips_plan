@@ -51,6 +51,7 @@ def lin_interp(y1, y2, dx):
     """
     return y1*(1-dx)+y2*dx
 
+
 for target in targets:
     beam_chan = None
     out_dict = {}
@@ -80,6 +81,15 @@ for target in targets:
                                   df['beams'][f, :, sun_dec_idx[1], :],
                                   sun_dec-df['beams'].dims[2][0][sun_dec_idx[0]])
             ha_grid = None
+            if 'flags' in conf.keys():
+                flag_filter = np.zeros(df['beams'].dims[3][0].shape, dtype=bool)
+                for f, flag in enumerate(conf['flags']):
+                    start = float(target['start_flag_%d' % (f+1)])-(N*INTERVAL_DEGREES)
+                    stop = float(target['stop_flag_%d' % (f+1)])+(N*INTERVAL_DEGREES)
+                    flag_filter = flag_filter | ((df['beams'].dims[3][0][...] > start) & (df['beams'].dims[3][0][...] < stop))
+                    print(flag_filter)
+                    print(np.where(flag_filter, np.nan, 1.)[None, :].shape)
+                sun_beam *= np.where(flag_filter, np.nan, 1.)[None, :]
         target_dec = float(target['dec_%s' % (c)])
         target_dec_idx = neighbours(df['beams'].dims[2][0][...], target_dec)
 
@@ -133,6 +143,11 @@ for target in targets:
         #print(fine_has)
         for ha_ in day_has:
             fine_sun_beam = np.where(np.abs(fine_has-ha_) < N*INTERVAL_DEGREES, np.inf, fine_sun_beam)
+        #if 'flags' in conf.keys():
+            #for f, flag in enumerate(conf['flags']):
+                #start = float(target['start_flag_%d' % (f+1)])
+                #stop = float(target['stop_flag_%d' % (f+1)])
+                #fine_sun_beam = np.where((fine_has<stop)&(fine_has>start), np.nan, fine_sun_beam)
         if np.all(fine_sun_beam==np.inf):
             print("all inf!")
         ha = fine_has[np.argmin(fine_sun_beam)]
