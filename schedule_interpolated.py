@@ -160,16 +160,6 @@ for target in targets:
         out_dict['ha_%s' % c] = ha
         out_dict['sun_attenuation_%s' % c] = np.log10(np.min(fine_sun_beam))
         out_dict['target_sensitivity_%s' % c] = target_beam[beam_idx, ha_idx]
-#        if c in PLOT:
-#            beam = df['beams'][beam_idx]
-#            plt.imshow(np.log10(beam[::-1]), extent=(-179.5, 179.5, -90, 90), zorder=1, vmin=-4, vmax=0)
-#            plt.plot(ha, sun_dec, 'o', color='yellow', zorder=2)
-#            plt.plot(-float(target['ha_%s' % c]) + ha, float(target['dec_%s' % c]), '+', color='black', zorder=2)
-#            plt.title("pointing=%s az=%d alt=%d sweetspot=%d\nlog10(sun_attenuation)=%+.1f target_sensitivity=%.3f" % (LABELS[c], df['az'][beam_idx], df['el'][beam_idx], df['sweetspot_number'][beam_idx], np.log10(sun_beam[beam_idx, ha_idx]),target_beam[beam_idx, ha_idx]))
-#            plt.xlabel("HA / degrees")
-#            plt.ylabel("Decl. / degrees")
-#            plt.savefig('%s_%s_hdf5.png' % (target['local_noon_str'][:10], c))
-#            plt.close()
     obs_ha.append(out_dict)
     print()
 
