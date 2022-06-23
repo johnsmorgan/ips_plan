@@ -1,15 +1,14 @@
-
 ## Instructions
 This assumes that you have a beam file in the correct format (ha vs dec not az vs el. as used for lookup_beam)
 
-Run `get_local_noons [yaml_file]` (this should only need to be done once per year. It's very slow.
+All of the metadata required to schedule the entire observing run (as well as the locations of generic data files) are all recorded in a `yaml`-format configuration file. See the example in the codebase.
 
-Run `calc_ecliptic_offsets.py [yaml_file]` to get position in ecliptic and equatorial coordinates for each pointing for each day OUT:targets.csv
+Each command reads from a single file and produces a single output file. These files are all specified in the configuration file.
 
-Run `schedule_interpolated.py [yaml_file]` (target?.csv is an input). This produces obs_ha*.csv
+Run `get_local_noons [yaml_file]` - this determines the UTC time (and Local Sidereal time) of local noon for each day. All scheduling is done relative to this LST.
 
-Run `generate_observations.py [yaml_file]` (obs_ha*.csv is an input). This produces ips_*.sh with single_observation.py commands.
+Run `calc_ecliptic_offsets.py [yaml_file]` to get position in ecliptic and equatorial coordinates for each pointing for each day
 
-## Generating the beams
+Run `schedule_interpolated.py [yaml_file]` This is where the actual optimised scheduling happens.
 
-Currently this is done in a rather ad-hoc way: first, all of the beams (except those with rotational symmetry) are generated using the scripts written for the IPS5 paper. Then these are re-gridded into HA vs Decl. We should redo this so we can use lookup_beam.py directly.
+Run `generate_observations.py [yaml_file]` (obs_ha*.csv is an input). This produces ips_*.sh with the commands that the MWA operations team can use to schedule the observations.
