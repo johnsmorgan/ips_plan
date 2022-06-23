@@ -1,8 +1,3 @@
-Change so azel.json doesn't have to be local, but is part of the python archive
-- fixed this by simply specifying it in .yaml file.
-
-
-
 With current setup, it's possible to end up scheduling with observation in sidelobe. This is undesireable as sidelobe beam will be more chromatic.
 
 - For each pointing, calculate *nominal* maximum (i.e. pointing in az/el file) in ha/dec space.
