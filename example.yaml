@@ -2,12 +2,12 @@
 # see https://yaml.org/refcard.html for details on syntax 
 ---
 # https://www.mwatelescope.org/images/documents/MWA_2020-B_call_for_proposals.pdf
-name: MWA_IPS_2020B # will be used as a prefix for all filenames
-obsName: morgan2020B_ips_ # will prefix the obsname (followed by field name)
+name: MWA_IPS_2022B # will be used as a prefix for all filenames
+obsName: morgan2022B_ips_ # will prefix the obsname (followed by field name)
 project: G0060
 # dates of observations (start-inclusive, stops at 00:00 on stopDate)
-startDate: 2020-12-01
-stopDate: 2020-12-31
+startDate: 2022-06-21
+stopDate: 2022-07-01
 
 # Observatory
 lat: -26.703319 # degrees
@@ -18,65 +18,126 @@ timezone: 8.0 # hours relative to UTC -- the local date (YYYY-MM-DD) of each loc
               # scheduled within 0.5 sidereal days of the local solar noon.
 
 fields: 
-  NNE: &wide_area
-    system: Heliocentric 
-    coordinates: [30.0, 30.0] # solar elongation and angle (relative to Ecliptic North) (both in degrees)
-    project_id: G0060
-  NE:
+  NE: &wide_area
     system: Heliocentric 
     coordinates: [30.0, 60.0] # solar elongation and angle (relative to Ecliptic North) (both in degrees)
     project_id: G0060
+    beam_chan: 121-132
+    obs_chan: "57:68;121:132"
   E:
     system: Heliocentric 
     coordinates: [30.0, 90.0] # solar elongation and angle (relative to Ecliptic North) (both in degrees)
     project_id: G0060
+    beam_chan: 121-132
+    obs_chan: "57:68;121:132"
   SE:
     system: Heliocentric 
     coordinates: [30.0, 120.0] # solar elongation and angle (relative to Ecliptic North) (both in degrees)
     project_id: G0060
+    beam_chan: 121-132
+    obs_chan: "57:68;121:132"
   SSE:
     system: Heliocentric 
     coordinates: [30.0, 150.0] # solar elongation and angle (relative to Ecliptic North) (both in degrees)
     project_id: G0060
-  NNW:
-    system: Heliocentric 
-    coordinates: [30.0, -30.0] # solar elongation and angle (relative to Ecliptic North) (both in degrees)
-    project_id: G0060
+    beam_chan: 121-132
+    obs_chan: "57:68;121:132"
   NW:
     system: Heliocentric 
     coordinates: [30.0, -60.0] # solar elongation and angle (relative to Ecliptic North) (both in degrees)
     project_id: G0060
+    beam_chan: 121-132
+    obs_chan: "57:68;121:132"
   W:
     system: Heliocentric 
     coordinates: [30.0, -90.0] # solar elongation and angle (relative to Ecliptic North) (both in degrees)
     project_id: G0060
+    beam_chan: 121-132
+    obs_chan: "57:68;121:132"
   SW:
     system: Heliocentric 
     coordinates: [30.0, -120.0] # solar elongation and angle (relative to Ecliptic North) (both in degrees)
     project_id: G0060
+    beam_chan: 121-132
+    obs_chan: "57:68;121:132"
   SSW:
     system: Heliocentric 
     coordinates: [30.0, -150.0] # solar elongation and angle (relative to Ecliptic North) (both in degrees)
     project_id: G0060
+    beam_chan: 121-132
+    obs_chan: "57:68;121:132"
+  E_hi:
+    system: Heliocentric 
+    coordinates: [25.0, 90.0] # solar elongation and angle (relative to Ecliptic North) (both in degrees)
+    project_id: G0060
+    beam_chan: 157-180
+    obs_chan: "157:180"
+    offset: 0
+    skip: 6
+  SE_hi:
+    system: Heliocentric 
+    coordinates: [25.0, 120.0] # solar elongation and angle (relative to Ecliptic North) (both in degrees)
+    project_id: G0060
+    beam_chan: 157-180
+    obs_chan: "157:180"
+    offset: 2
+    skip: 6
+  SSE_hi:
+    system: Heliocentric 
+    coordinates: [25.0, 150.0] # solar elongation and angle (relative to Ecliptic North) (both in degrees)
+    project_id: G0060
+    beam_chan: 157-180
+    obs_chan: "157:180"
+    offset: 3
+    skip: 6
+  W_hi:
+    system: Heliocentric 
+    coordinates: [25.0, -90.0] # solar elongation and angle (relative to Ecliptic North) (both in degrees)
+    project_id: G0060
+    beam_chan: 157-180
+    obs_chan: "157:180"
+    offset: 1
+    skip: 6
+  SW_hi:
+    system: Heliocentric 
+    coordinates: [25.0, -120.0] # solar elongation and angle (relative to Ecliptic North) (both in degrees)
+    project_id: G0060
+    beam_chan: 157-180
+    obs_chan: "157:180"
+    offset: 4
+    skip: 6
+  SSW_hi:
+    system: Heliocentric 
+    coordinates: [25.0, -150.0] # solar elongation and angle (relative to Ecliptic North) (both in degrees)
+    project_id: G0060
+    beam_chan: 157-180
+    obs_chan: "157:180"
+    offset: 5
+    skip: 6
 
 priority: # highest priority first
+  - E_hi
+  - W_hi
+  - SE_hi
+  - SW_hi
   - E
   - W
   - SE
   - SW
-  - NE
-  - NW
+  - SSE_hi
+  - SSW_hi
   - SSE
   - SSW
-  - NNE
-  - NNW
+  - NE
+  - NW
 
 solarAttenuationCutoff: -3.0 # log10 of solar attenuation required relative to beam centre
-timeTweakDegrees: 2.0 # after selecting a pointing and an LST, allow exact observing time to drift within
+timeTweakDegrees: 4.0 # after selecting a pointing and an LST, allow exact observing time to drift within
                       # +/- this value to select maximum solar attenuation.
 
 files:
-        beams: /home/jmorgan/Projects/allsky/sweetspots/beams.hdf5
+        pointings: /data/other/pb_lookup/azel.json
+        beams: /data/other/pb_lookup/beams2.hdf5
         noons: solar_noons.csv
         targets: targets.csv
         observations: observations.csv
@@ -85,7 +146,7 @@ obs:
     coarse_channels: "57:68;121:132"
     pre_time: 16 #s
     duration: 600 #s
-    shifttime: 608 #s
+    shifttime: 200 #s
     inttime: 0.5 #s
     freqres: 10 #kHz
     creator: 'jmorgan'
