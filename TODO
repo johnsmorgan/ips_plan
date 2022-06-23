@@ -1,0 +1,17 @@
+Change so azel.json doesn't have to be local, but is part of the python archive
+- fixed this by simply specifying it in .yaml file.
+
+
+
+With current setup, it's possible to end up scheduling with observation in sidelobe. This is undesireable as sidelobe beam will be more chromatic.
+
+- For each pointing, calculate *nominal* maximum (i.e. pointing in az/el file) in ha/dec space.
+
+- On the fly, calculate distance from this point for each **target** pointing, and exclude those too far (in a frequency dependent way) from being target pointings
+
+OR
+
+- When generating hdf5 file, for each band, generate a boolean mask corresponding to the hpbw (floodfill algorithm starting at nominal az/el) of the main beam).
+
+
+There is no mechanism for identifying when a chosen HA is completely occupied (can't even be scheduled after fine tuning) or if falls in a gap of <10 minutes between other constraints.
