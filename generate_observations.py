@@ -13,7 +13,7 @@ parser.add_argument('infile', help='Input yaml file')
 args = parser.parse_args()
 conf = safe_load(open(args.infile))
 
-SUN_OBS_STR = "schedule_observation.py --starttime={pre_time_comma} --stoptime=++16s --freq='{coarse_channels}' --obsname={obs_name_prefix}Sun --source=Sun --mode=MWAX_CORRELATOR --inttime={inttime} --freqres={freqres} --creator=jmorgan --project={project}"
+SUN_OBS_STR = "schedule_observation.py --starttime={pre_time_comma} --stoptime=++16s --freq='{coarse_channels}' --obsname={obs_name_prefix}Sun --source=Sun --mode=MWAX_CORRELATOR --inttime={inttime} --freqres={freqres} --creator={creator} --project={project}"
 OBSERVATION_STR = "schedule_observation.py --starttime={time_comma} --stoptime=++{duration}s --freq='{coarse_channels}'  --obsname={obs_name_prefix}{field} --shifttime={shifttime} --mode=MWAX_CORRELATOR --inttime={inttime} --freqres={freqres} --creator={creator} --project={project} --azimuth={az} --elevation={el}"
 
 NO_WRITE = []
@@ -41,6 +41,7 @@ for t in conf['priority']:
         out_dict = []
         out_dict = conf['obs']
         out_dict['coarse_channels'] = conf['fields'][t]['obs_chan']
+        out_dict['creator'] = conf['fields'][t]['obs_chan']
         out_dict['sweetspot'] = obs_ha['beam_%s' % t][S].data[j]
         out_dict['time'] = times[j].isot[:19]
         out_dict['time_comma'] = times[j].isot[:19].replace('T', ',')
