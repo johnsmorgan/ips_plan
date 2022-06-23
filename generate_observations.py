@@ -13,12 +13,12 @@ parser.add_argument('infile', help='Input yaml file')
 args = parser.parse_args()
 conf = safe_load(open(args.infile))
 
-SUN_OBS_STR = "schedule_observation.py --starttime={pre_time_comma} --stoptime=++16s --freq='{coarse_channels}' --obsname={obs_name_prefix}Sun --source=Sun --mode=HW_LFILES --inttime={inttime} --freqres={freqres} --creator=jmorgan --project={project}"
-OBSERVATION_STR = "schedule_observation.py --starttime={time_comma} --stoptime=++{duration}s --freq='{coarse_channels}'  --obsname={obs_name_prefix}{field} --shifttime={shifttime} --mode=HW_LFILES --inttime={inttime} --freqres={freqres} --creator={creator} --project={project} --azimuth={az} --elevation={el} --nomode"
+SUN_OBS_STR = "schedule_observation.py --starttime={pre_time_comma} --stoptime=++16s --freq='{coarse_channels}' --obsname={obs_name_prefix}Sun --source=Sun --mode=MWAX_CORRELATOR --inttime={inttime} --freqres={freqres} --creator=jmorgan --project={project}"
+OBSERVATION_STR = "schedule_observation.py --starttime={time_comma} --stoptime=++{duration}s --freq='{coarse_channels}'  --obsname={obs_name_prefix}{field} --shifttime={shifttime} --mode=MWAX_CORRELATOR --inttime={inttime} --freqres={freqres} --creator={creator} --project={project} --azimuth={az} --elevation={el}"
 
 NO_WRITE = []
 
-azel = {int(k): v for k, v in json.load(open("azel.json")).items()}
+azel = {int(k): v for k, v in json.load(open(conf['files']['pointings'])).items()}
 
 obs_ha = ascii.read(conf['files']['observations'])
 noons = Time(obs_ha['local_noon_str'][S])
@@ -40,6 +40,7 @@ for t in conf['priority']:
         print(t)
         out_dict = []
         out_dict = conf['obs']
+        out_dict['coarse_channels'] = conf['fields'][t]['obs_chan']
         out_dict['sweetspot'] = obs_ha['beam_%s' % t][S].data[j]
         out_dict['time'] = times[j].isot[:19]
         out_dict['time_comma'] = times[j].isot[:19].replace('T', ',')
