@@ -14,7 +14,7 @@ args = parser.parse_args()
 conf = safe_load(open(args.infile))
 
 SUN_OBS_STR = "schedule_observation.py --starttime={pre_time_comma} --stoptime=++16s --freq='{coarse_channels}' --obsname={obs_name_prefix}Sun --source=Sun --mode=MWAX_CORRELATOR --inttime={inttime} --freqres={freqres} --creator={creator} --project={project}"
-OBSERVATION_STR = "schedule_observation.py --starttime={time_comma} --stoptime=++{duration}s --freq='{coarse_channels}'  --obsname={obs_name_prefix}{field} --shifttime={shifttime} --mode=MWAX_CORRELATOR --inttime={inttime} --freqres={freqres} --creator={creator} --project={project} --azimuth={az} --elevation={el}"
+OBSERVATION_STR = "schedule_observation.py --starttime={time_comma} --stoptime=++{duration}s --freq='{coarse_channels}' --obsname={obs_name_prefix}{field} --shifttime={shifttime} --mode=MWAX_CORRELATOR --inttime={inttime} --freqres={freqres} --creator={creator} --project={project} --azimuth={az} --elevation={el}"
 
 NO_WRITE = []
 
@@ -45,15 +45,14 @@ for t in conf["priority"]:
         out_dict = []
         out_dict = conf["obs"]
         out_dict["coarse_channels"] = conf["fields"][t]["obs_chan"]
-        out_dict["creator"] = conf["fields"][t]["obs_chan"]
         out_dict["sweetspot"] = obs_ha["beam_%s" % t][S].data[j]
         out_dict["time"] = times[j].isot[:19]
+        out_dict["obsid"] = int(times[j].gps)
         out_dict["time_comma"] = times[j].isot[:19].replace("T", ",")
         out_dict["pre_time_comma"] = (times[j] - 32 * u.second).isot[:19].replace("T", ",")
         out_dict["az"], out_dict["el"] = azel[out_dict["sweetspot"]]
         out_dict["obs_name_prefix"] = conf["obsName"]
         out_dict["field"] = t
-        out_dict["project"] = conf["project"]
         out_dict["ha"] = obs_ha["ha_%s" % t][S].data[j]
         out_dict["sun_attenuation"] = obs_ha["sun_attenuation_%s" % t][S].data[j]
         out_dict["target_sensitivity"] = obs_ha["ha_%s" % t][S].data[j]
@@ -69,6 +68,8 @@ with open(conf["files"]["schedule"], "w") as outfile:
             continue
         t2 = Time(o["time"])
         if t1:
+            if t1.datetime.day != t2.datetime.day:
+                print("echo ", t2.isot[:10], file=outfile)
             if t2 - t1 < u.second * (conf["obs"]["duration"] + 32):
                 if t2 - t1 < u.second * (conf["obs"]["duration"]):
                     print("# ERROR Clashing observations %fs apart" % ((t2 - t1).sec), file=outfile)
@@ -79,8 +80,9 @@ with open(conf["files"]["schedule"], "w") as outfile:
                 schedule_time += 32
 
         else:
+            print("echo ", t2.isot[:10], file=outfile)
             print(SUN_OBS_STR.format(**o), file=outfile)
-        print(OBSERVATION_STR.format(**o), file=outfile)
+        print(OBSERVATION_STR.format(**o), '#', o["obsid"], file=outfile)
         target_time += conf["obs"]["duration"]
         sun_target_time += conf["obs"]["duration"]
         schedule_time += conf["obs"]["duration"]
